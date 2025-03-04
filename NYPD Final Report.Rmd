@@ -1,0 +1,134 @@
+---
+title: "NYPD Shooting Incidents"
+date: "2025-03-04"
+output:
+  pdf_document: default
+  word_document: default
+---
+# Introduction
+
+This report looks at every shooting incident in NYC that occurred from 2006 to the end of 2023, and, specifically, aims to analyze the demographics of the victims to determine if certain communities are more vulnerable.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+## Import Data
+```{r}
+NYPD_url <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD"
+```
+
+```{r import_data,message=FALSE}
+NYPD_data <- read_csv(NYPD_url)
+```
+
+# Tidy Data
+
+Eliminate the columns unnecessary for the current analysis.
+```{r tidy_data}
+NYPD_data <- NYPD_data %>%
+  select(STATISTICAL_MURDER_FLAG, PERP_AGE_GROUP, PERP_SEX, PERP_RACE, VIC_AGE_GROUP, VIC_SEX, VIC_RACE)
+summarize(NYPD_data)
+```
+
+# Visualize and Analyze the Data
+
+## Victim's Age
+
+Plot the data based on the victim's age group.
+```{r vic_age}
+NYPD_data %>%
+  ggplot(aes(x = VIC_AGE_GROUP)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents by Victim's Age Group",
+       x = "Victim's Age",
+       y = "Number of Shooting Incidents")
+```
+
+```{r perp_age}
+NYPD_data %>%
+  filter(VIC_AGE_GROUP == '25-44') %>%
+  ggplot(aes(x = PERP_AGE_GROUP)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents where victim is 25-44",
+       x = "Perp's Age",
+       y = "Number of Shooting Incidents") +
+  guides(x = guide_axis(angle = 45))
+```
+
+
+The number of incidents is highest within the age range 25-44, followed by 18-24. When filtering out for the perpetrators of of the highest victim age group, it seems they are targeted the most by people within their own age range.
+
+## Victim's Sex
+
+Plot the data based on the victim's sex.
+```{r vic_sex}
+NYPD_data %>%
+  ggplot(aes(x = VIC_SEX)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents by Victim's Sex",
+       x = "Victim's Sex",
+       y = "Number of Shooting Incidents")
+```
+
+```{r perp_sex}
+NYPD_data %>%
+  filter(VIC_SEX == 'M') %>%
+  ggplot(aes(x = PERP_SEX)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents when the victim is male",
+       x = "Perp's Sex",
+       y = "Number of Shooting Incidents")
+```
+
+The amount of male victims far outnumber the amount of female victims, by a ratio of almost 10:1. Like the previous section, it seems the victims are targeted the most by others of their own sex, i.e. male.
+
+## Victim's Race
+
+Plot the date based on the victim's race.
+
+```{r vic_race}
+NYPD_data %>%
+  ggplot(aes(x = VIC_RACE)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents by Victim's Race",
+       x = "Victim's Race",
+       y = "Number of Shooting Incidents") +
+  guides(x = guide_axis(angle = 45))
+```
+
+```{r perp_race}
+NYPD_data %>%
+  filter(VIC_RACE == 'BLACK') %>%
+  ggplot(aes(x = PERP_RACE)) +
+  geom_bar() +
+  labs(title = "Shooting Incidents when the victim is black",
+       x = "Perp's Race",
+       y = "Number of Shooting Incidents") +
+  guides(x = guide_axis(angle = 45))
+```
+The Black community has the highest number of victims, followed by White Hispanic and Black Hispanic. Similarly to the previous, the perpetrators are of the same race.
+
+# Linear Regression Model
+
+```{r lm}
+NYPD_model <- lm(STATISTICAL_MURDER_FLAG ~ VIC_AGE_GROUP + VIC_SEX + VIC_RACE, data = NYPD_data)
+summary(NYPD_model)
+
+NYPD_w_pred <- NYPD_data %>% mutate(pred = predict(NYPD_model))
+
+NYPD_w_pred %>%
+  ggplot() +
+  geom_point(aes(x = 'VIC_AGE_GROUP', y = 'STATISTICAL_MURDER_FLAG'), color = "blue") +
+  geom_point(aes(x = 'VIC_AGE_GROUP', y = pred), color = "red")
+```
+
+# Sources of Bias
+As for sources of bias, as someone who has never lived in a large city, the large number of shooting incidents was a surprise to me. I believe I was able to eliminate any personal biases due to focusing on the numbers on their own.
+
+# Conclusion
+
+The targets of shooting incidents disproportionately skew towards the black and Hispanic communities. In addition, mot victims are men and young adults. Additionally, this raises additional questions of whether the intersection of these various demographics will result in different conclusions (i.e. comparing the number of male to female communities within the age range of 25-44 and seeing if the ratio is different).
