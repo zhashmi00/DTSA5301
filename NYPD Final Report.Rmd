@@ -127,7 +127,7 @@ NYPD_w_pred %>%
 ```
 
 # Sources of Bias
-As for sources of bias, as someone who has never lived in a large city, the large number of shooting incidents was a surprise to me. I believe I was able to eliminate any personal biases due to focusing on the numbers on their own.
+As for sources of bias, as someone who has never lived in a large city, the large number of shooting incidents was a surprise to me. I believe I was able to eliminate any personal biases due to focusing on the numbers on their own. There is also the fact that there are many missing values from the given data set, which can skew the results. I would also like to mention that there can be biases from the ones who had made the arrests or reported the initial data.
 
 # Conclusion
 
